@@ -1,0 +1,101 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "23bbdaf2-5c07-4b28-a217-0ba2811055d1",
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [-1024, 80]
+    },
+    {
+      "parameters": {
+        "url": "https://dummyjson.com/products",
+        "options": {}
+      },
+      "id": "7ab5da86-477d-4530-8b47-f64fbc6f5e4d",
+      "name": "Scrape Leads (Dummy API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [-816, 80]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.products\n  .filter(product => new Date(product.createdAt || product.date || '2025-08-08T18:17:27.373193') > new Date('2025-08-07T18:17:27.373193'))\n  .map(product => { return { json: product } });"
+      },
+      "id": "609f99db-cc46-4301-a17c-450f5d328963",
+      "name": "Filter New Leads",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [-624, 80]
+    },
+    {
+      "parameters": {
+        "chatId": "REPLACE_WITH_YOUR_TELEGRAM_CHAT_ID",
+        "text": "New Property Lead:\nName: {{$json.title}}\nPrice: {{$json.price}}\nDescription: {{$json.description}}",
+        "additionalFields": {}
+      },
+      "id": "916833fc-6d9a-40b6-958f-0822c1b8a0de",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [-416, -16],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "REPLACE_WITH_EMAIL",
+        "subject": "=New Property Lead - {{$json.title}}",
+        "emailType": "text",
+        "message": "=Lead Details: \nName: {{$json.title}} Price: {{$json.price}} Description: {{$json.description}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [-416, 144],
+      "id": "4536eccf-9ad6-4aa5-b57f-bf01ef943510",
+      "name": "Send a message",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "lead scrapping\n",
+        "height": 320,
+        "width": 832
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-1040, -32],
+      "typeVersion": 1,
+      "id": "a6a7e35b-17e9-46cc-ad5b-49035b7d4906",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Daily Trigger": {
+      "main": [[{ "node": "Scrape Leads (Dummy API)", "type": "main", "index": 0 }]]
+    },
+    "Scrape Leads (Dummy API)": {
+      "main": [[{ "node": "Filter New Leads", "type": "main", "index": 0 }]]
+    },
+    "Filter New Leads": {
+      "main": [
+        [{ "node": "Send to Telegram", "type": "main", "index": 0 }],
+        [{ "node": "Send a message", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1cfcf4fe-3d8b-41de-89dc-22b374f92f15"
+}
